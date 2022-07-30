@@ -1,36 +1,59 @@
 import {useState} from "react"
-import { StatusBar } from 'expo-status-bar';
-import { Button, StyleSheet, Text, TextInput, View, ScrollView } from 'react-native';
-
+import { StyleSheet, View, FlatList, Button } from 'react-native';
+import TodoInput from "./components/TodoInput";
+import TodoItem from "./components/TodoItem";
+import { StatusBar } from "expo-status-bar";
 export default function App() {
-  const [enteredText, setEnteredText] = useState('');
+  
+  const [modalIsVisible, setModalIsVisible] = useState(false);
   const [todo, setTodo] = useState([]);
 
-  const todoInputHandler = (text) => {
-    setEnteredText(text);
+  const startAddTodo = () => {
+    setModalIsVisible(true);
   }
-  const addTodoHandler = () => {
+
+  const endAddTodo = () => {
+    setModalIsVisible(false);
+  }
+
+  const addTodoHandler = (enteredText) => {
     setTodo((currentTodo) => [
       ...currentTodo,
-      enteredText
+      {text: enteredText, id: Math.random().toString()},
     ]);
+    endAddTodo();
+  }
+
+  const DeleteTodoHandler = (id) => {
+    setTodo((currentTodo) => {
+      return currentTodo.filter((todo) => todo.id !== id);
+    });
   }
   return (
-    <View style={styles.appContainer}>
-      <View style={styles.inputContainer}>
-        <TextInput style={styles.TextInput} placeholder='Enter ToDo' onChangeText={todoInputHandler} />
-        <Button title='Add ToDo' onPress={addTodoHandler} />
+    <>
+      <StatusBar style="light" />
+      <View style={styles.appContainer}>
+        <Button title="Add Todo" color="#5e0acc" onPress={startAddTodo} />
+        <TodoInput 
+          onAddHandler={addTodoHandler} 
+          onCancel={endAddTodo} 
+          visible={modalIsVisible} 
+        />
+        <View style={styles.todoContainer}>
+        <FlatList data={todo} renderItem={(itemData) => {
+          return (
+            <TodoItem 
+              text={itemData.item.text} 
+              id={itemData.item.id}
+              onDeleteItem={DeleteTodoHandler}
+              />
+          )
+        }} keyExtractor={(item, index) => {
+          return item.id;
+        }}/>
+        </View>
       </View>
-      <View style={styles.todoContainer}>
-      <ScrollView >
-        {todo.map((todoItem) => 
-          <View style={styles.todoItem} key={todoItem}>
-            <Text style={styles.todoText}  >{todoItem}</Text>
-          </View>
-        )}
-      </ScrollView>
-      </View>
-    </View>
+    </>
   );
 }
 
@@ -40,32 +63,9 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingHorizontal: 16
   },
-  inputContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc'
-  },
-  TextInput: {
-    borderWidth: 1,
-    borderColor: '#cccccc',
-    width: '70%',
-    marginRight: 8,
-    padding: 8,
-  },
+
   todoContainer: {
     flex: 5,
   },
-  todoItem: {
-    margin: 8,
-    borderRadius: 6,
-    padding: 8,
-    backgroundColor: "#5e0acc"
-  },
-  todoText: {
-    color: "white",
-  }
+
 });
